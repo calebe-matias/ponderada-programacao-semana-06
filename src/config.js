@@ -2,7 +2,17 @@ module.exports = {
   flow: {
     name: 'create-digital-testament',
     version: '1.0.0',
-    environment: 'academic-demo'
+    environment: 'academic-demo',
+    expectedSteps: [
+      { name: 'captureVideo', policyKey: 'videoCapture' },
+      { name: 'uploadVideo', policyKey: 'gcsUpload' },
+      { name: 'transcribeVideo', policyKey: 'transcription' },
+      { name: 'generateDocument', policyKey: 'documentGenerator' },
+      { name: 'signDocument', policyKey: 'digitalSignature' },
+      { name: 'generateHash', policyKey: 'hashing' },
+      { name: 'anchorHashOnBlockchain', policyKey: 'blockchain' },
+      { name: 'saveMetadataOnMongo', policyKey: 'mongoRepository' }
+    ]
   },
   quality: {
     requiredTraceFields: ['protocol', 'version', 'durationMs', 'status'],
@@ -11,6 +21,11 @@ module.exports = {
     requireSha256: true
   },
   services: {
+    videoCapture: {
+      protocol: 'APP_INTERNAL_SECURE_STORAGE',
+      version: 'testify-mobile@1.0.3',
+      maxDurationMs: 4000
+    },
     gcsUpload: {
       protocol: 'HTTPS/TLS 1.3',
       version: 'GCS JSON API v1',

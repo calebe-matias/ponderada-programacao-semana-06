@@ -2,7 +2,8 @@ class TestamentRecord {
   constructor({
     testamentId,
     userId,
-    video,
+    capturedVideo,
+    storedVideo,
     transcript,
     document,
     signature,
@@ -13,7 +14,8 @@ class TestamentRecord {
   }) {
     this.testamentId = testamentId;
     this.userId = userId;
-    this.video = video;
+    this.capturedVideo = capturedVideo;
+    this.storedVideo = storedVideo;
     this.transcript = transcript;
     this.document = document;
     this.signature = signature;

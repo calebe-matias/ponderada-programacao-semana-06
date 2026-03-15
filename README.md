@@ -1,433 +1,178 @@
-# Sprint 3 — Fluxo de integração como código
+# Sprint 3 - Fluxo de integração como código
 
-## Tema escolhido
-**Criação de testamento digital no app da Testify**
+## Objetivo
+Este repositório implementa, em Node.js, o fluxo de criação de testamento digital no app da Testify. O fluxo cobre exatamente as seguintes etapas:
 
-Este projeto documenta e implementa, em **Node.js**, um fluxo de integração ponta a ponta para criação de um testamento digital. O fluxo cobre as seguintes etapas:
-
-1. gravação do vídeo no app;
-2. upload do vídeo para o **Google Cloud Storage (GCS)**;
-3. transcrição do vídeo;
-4. geração do documento escrito;
-5. assinatura digital do documento;
-6. geração do hash criptográfico;
+1. gravação do video no app;
+2. upload do video para o GCS;
+3. transcricao;
+4. criacao do documento escrito;
+5. assinatura digital;
+6. geracao do hash;
 7. salvamento do hash em blockchain;
-8. persistência dos metadados e trilha de auditoria em **MongoDB**.
+8. persistencia dos dados no MongoDB.
 
-O objetivo é atender ao enunciado da Sprint 3 em duas frentes:
+Os servicos externos sao simulados para permitir execucao local, mas o controle de qualidade continua verificando tempos, protocolos, versoes e tratamento de excecoes.
 
-- **(1) Documentar os requisitos em código**;
-- **(2) Aferir a qualidade dos requisitos envolvidos no sistema, ao executar estes códigos**.
+## Como a entrega responde ao barema
+### Item (a): estrutura de integracao
+O projeto identifica e descreve:
 
----
+- camadas logicas: entrada CLI, orquestracao do fluxo, servicos integrados, rastreabilidade e repositorio;
+- modulos e componentes: `createDigitalTestamentFlow`, `qualityGate`, `integrationTrace` e os servicos em `src/services`;
+- servicos externos simulados: captura mobile, GCS, transcricao, geracao documental, assinatura, blockchain e MongoDB;
+- hardware: smartphone do usuario, infraestrutura cloud e nos da blockchain;
+- software: app Testify, runtime Node.js e APIs externas representadas por mocks;
+- processos: captura, upload, transcricao, formalizacao documental, assinatura, hashing, ancoragem e persistencia.
 
-# 1. Como este projeto responde ao enunciado
+### Item (b): controle de qualidade da integracao
+O controle de qualidade esta implementado em codigo e testado automaticamente. Ele valida:
 
-## 1.1. Item (a): identificar e descrever a estrutura de integração
-O projeto descreve explicitamente:
+- tempos máximos por etapa e tempo total;
+- protocolo usado em cada integração;
+- versão registrada em cada etapa;
+- status de sucesso do trace;
+- tratamento padronizado de exceções;
+- presença do hash SHA-256 e do recibo da blockchain.
 
-- **camadas**;
-- **módulos**;
-- **componentes**;
-- **serviços**;
-- **hardware**;
-- **software**;
-- **processos**.
+Arquivos centrais:
 
-Tudo isso está documentado neste README e refletido na estrutura de pastas e no código.
-
-## 1.2. Item (b): documentar e codificar o controle de qualidade da integração
-O projeto implementa controle de qualidade com verificação de:
-
-- **tempos (SLA por etapa e total)**;
-- **protocolos**;
-- **versões**;
-- **tratamento de exceções**;
-- **rastreabilidade por trace**;
-- **validação de integridade do hash e da ancoragem em blockchain**.
-
-Esse controle está codificado principalmente em:
-
-- `src/application/services/QualityGateService.js`
-- `tests/integration/*.test.js`
-- `tests/quality/*.test.js`
+- `src/config.js`
+- `src/createDigitalTestamentFlow.js`
+- `src/qualityGate.js`
+- `src/integrationTrace.js`
+- `tests/createDigitalTestamentFlow.test.js`
+- `tests/qualityGate.test.js`
 - `features/create-digital-testament.feature`
 
----
-
-# 2. Visão geral da solução técnica
-
-## 2.1. Fluxo funcional
-
+## Estrutura simplificada de pastas
 ```text
-App Testify (mobile)
-   -> Upload do vídeo ao GCS
-   -> Transcrição do conteúdo
-   -> Geração do documento escrito
-   -> Assinatura digital
-   -> Geração do hash SHA-256
-   -> Ancoragem do hash na blockchain
-   -> Persistência dos metadados no MongoDB
-   -> Retorno do identificador do testamento + trilha de auditoria
+.
+|-- README.md
+|-- package.json
+|-- features
+|   `-- create-digital-testament.feature
+|-- src
+|   |-- cli.js
+|   |-- config.js
+|   |-- createDigitalTestamentFlow.js
+|   |-- errors.js
+|   |-- integrationTrace.js
+|   |-- qualityGate.js
+|   |-- testamentRecord.js
+|   |-- utils.js
+|   `-- services
+|       |-- videoCaptureService.js
+|       |-- gcsStorageService.js
+|       |-- transcriptionService.js
+|       |-- documentService.js
+|       |-- signatureService.js
+|       |-- hashService.js
+|       |-- blockchainService.js
+|       `-- mongoTestamentRepository.js
+`-- tests
+    |-- buildFlow.js
+    |-- createDigitalTestamentFlow.test.js
+    `-- qualityGate.test.js
 ```
 
-## 2.2. Diagrama lógico do fluxo
+Essa estrutura continua organizada, mas sem as camadas artificiais que o gerador anterior criou.
+
+## Fluxo implementado
+```text
+App Testify Mobile
+  -> gravação do video
+  -> upload ao GCS
+  -> transcricao
+  -> geracao do documento
+  -> assinatura digital
+  -> hash SHA-256
+  -> ancoragem em blockchain
+  -> persistencia no MongoDB
+  -> retorno do identificador e do trace
+```
 
 ```mermaid
 flowchart LR
-    A[App Testify Mobile] --> B[Serviço de Upload]
-    B --> C[GCS]
-    C --> D[Serviço de Transcrição]
-    D --> E[Gerador de Documento]
-    E --> F[Serviço de Assinatura Digital]
-    F --> G[Serviço de Hash SHA-256]
-    G --> H[Gateway Blockchain]
-    H --> I[MongoDB Repository]
-    I --> J[Resposta final com audit trail]
+    A["App Testify Mobile"] --> B["Gravação do video"]
+    B --> C["Upload para GCS"]
+    C --> D["Transcrição"]
+    D --> E["Documento escrito"]
+    E --> F["Assinatura digital"]
+    F --> G["Hash SHA-256"]
+    G --> H["Blockchain"]
+    H --> I["MongoDB"]
+    I --> J["Resposta com trace"]
 ```
 
----
+## Requisitos documentados em codigo
+### Requisitos funcionais
+- `RF-01`: capturar um video MP4 valido no app. Implementação em `src/services/videoCaptureService.js`.
+- `RF-02`: enviar o video ao GCS. Implementação em `src/services/gcsStorageService.js`.
+- `RF-03`: transcrever o video. Implementação em `src/services/transcriptionService.js`.
+- `RF-04`: gerar o documento escrito. Implementação em `src/services/documentService.js`.
+- `RF-05`: assinar digitalmente o documento. Implementação em `src/services/signatureService.js`.
+- `RF-06`: gerar hash SHA-256. Implementação em `src/services/hashService.js`.
+- `RF-07`: salvar o hash em blockchain. Implementação em `src/services/blockchainService.js`.
+- `RF-08`: persistir o dossie no MongoDB. Implementação em `src/services/mongoTestamentRepository.js`.
+- `RF-09`: retornar trace completo da integração. Implementação em `src/integrationTrace.js`.
+
+### Requisitos nao funcionais
+- `RNF-01`: controlar SLA por etapa e no fluxo total. Implementação em `src/config.js` e `src/qualityGate.js`.
+- `RNF-02`: registrar protocolos usados. Cada passo grava `protocol` no trace.
+- `RNF-03`: registrar versões usadas. Cada passo grava `version` no trace.
+- `RNF-04`: padronizar exceções. Implementação em `src/errors.js`.
+- `RNF-05`: garantir rastreabilidade ponta a ponta. Implementação em `src/integrationTrace.js`.
+- `RNF-06`: validar integridade e recibo técnico. Implementação em `src/qualityGate.js`.
+
+## Politicas de qualidade codificadas
+As políticas usadas pelo `qualityGate` são:
+
+| Etapa | Protocolo | Versão | SLA |
+|---|---|---|---|
+| Gravação do video | `APP_INTERNAL_SECURE_STORAGE` | `testify-mobile@1.0.3` | `4000 ms` |
+| Upload GCS | `HTTPS/TLS 1.3` | `GCS JSON API v1` | `15000 ms` |
+| Transcrição | `HTTPS/TLS 1.3` | `Speech-to-Text API v2` | `45000 ms` |
+| Documento | `INTERNAL_EVENT` | `document-service@1.0.0` | `5000 ms` |
+| Assinatura | `HTTPS/TLS 1.3 + CMS/PKCS#7` | `signature-service@2.1.0` | `10000 ms` |
+| Hash | `INTERNAL_FUNCTION_CALL` | `sha256@1.0.0` | `1000 ms` |
+| Blockchain | `JSON-RPC 2.0 over HTTPS` | `blockchain-gateway@1.3.0` | `20000 ms` |
+| MongoDB | `MongoDB Wire Protocol over TLS` | `mongodb@8.0` | `5000 ms` |
+
+Tempo maximo ponta a ponta: `120000 ms`.
+
+## Gherkin
+O arquivo `features/create-digital-testament.feature` documenta o comportamento em linguagem de negocio com tres cenarios:
+
+1. sucesso completo;
+2. falha por timeout na transcricao;
+3. falha na blockchain.
+
+## Testes que aferem a qualidade
+### Integracao
+- fluxo completo com sucesso;
+- timeout de transcricao interrompendo a orquestracao;
+- falha de blockchain com excecao padronizada;
+- rejeicao de arquivo invalido.
+
+### Qualidade
+- aprovacao quando tempos, protocolos, versoes e recibo estao corretos;
+- reprovacao por protocolo divergente;
+- reprovacao por versao ausente;
+- reprovacao por passo obrigatorio ausente no trace.
+
+## Como executar
+Requisito: Node.js 20+.
 
-# 3. Estrutura de integração
-
-## 3.1. Camadas arquiteturais
-
-### A. Interface layer
-Responsável por iniciar a execução do fluxo.
-
-**Arquivo principal:**
-- `src/interfaces/cli/runFlow.js`
-
-### B. Application layer
-Responsável por orquestrar o caso de uso e aplicar controle de qualidade.
-
-**Arquivos principais:**
-- `src/application/use-cases/CreateDigitalTestamentFlow.js`
-- `src/application/services/QualityGateService.js`
-
-### C. Domain layer
-Responsável pelas entidades centrais e exceções do negócio.
-
-**Arquivos principais:**
-- `src/domain/entities/TestamentRecord.js`
-- `src/domain/errors/IntegrationError.js`
-
-### D. Infrastructure layer
-Responsável por simular as integrações externas e a observabilidade.
-
-**Arquivos principais:**
-- `src/infrastructure/services/MockGcsStorageService.js`
-- `src/infrastructure/services/MockTranscriptionService.js`
-- `src/infrastructure/services/MockDocumentService.js`
-- `src/infrastructure/services/MockSignatureService.js`
-- `src/infrastructure/services/MockHashService.js`
-- `src/infrastructure/services/MockBlockchainService.js`
-- `src/infrastructure/repositories/MockMongoTestamentRepository.js`
-- `src/infrastructure/observability/IntegrationTrace.js`
-
----
-
-## 3.2. Módulos, componentes e serviços
-
-| Tipo | Elemento | Responsabilidade |
-|---|---|---|
-| Módulo | `CreateDigitalTestamentFlow` | Orquestrar todas as etapas do fluxo |
-| Módulo | `QualityGateService` | Validar tempos, protocolos, versões e status |
-| Componente | `IntegrationTrace` | Registrar trace das etapas e erros |
-| Serviço | `MockGcsStorageService` | Simular upload para GCS |
-| Serviço | `MockTranscriptionService` | Simular transcrição do vídeo |
-| Serviço | `MockDocumentService` | Simular criação do documento escrito |
-| Serviço | `MockSignatureService` | Simular assinatura digital |
-| Serviço | `MockHashService` | Gerar hash SHA-256 |
-| Serviço | `MockBlockchainService` | Simular ancoragem em blockchain |
-| Repositório | `MockMongoTestamentRepository` | Simular persistência em MongoDB |
-
----
-
-## 3.3. Hardware, software e processos envolvidos
-
-### Hardware
-- **Smartphone do usuário**: captura do vídeo no app Testify.
-- **Servidor/cloud runtime**: execução dos serviços de integração.
-- **Infraestrutura do provedor cloud**: armazenamento do vídeo e serviços auxiliares.
-- **Nós/infra da blockchain**: registro da prova de integridade do hash.
-
-### Software
-- **App Testify Mobile**
-- **Node.js**
-- **Google Cloud Storage (conceitualmente representado)**
-- **Serviço de transcrição (conceitualmente representado)**
-- **Serviço de assinatura digital (conceitualmente representado)**
-- **Blockchain gateway / JSON-RPC**
-- **MongoDB**
-
-### Processos
-1. captura do vídeo;
-2. envio seguro do arquivo;
-3. transformação do vídeo em texto;
-4. formalização documental;
-5. assinatura e autenticação;
-6. prova criptográfica de integridade;
-7. registro imutável do hash;
-8. persistência do dossiê técnico do testamento.
-
----
-
-# 4. Estrutura de pastas
-
-```text
-/testify-sprint3
-├── README.md
-├── package.json
-├── docs
-│   └── architecture.md
-├── features
-│   └── create-digital-testament.feature
-├── src
-│   ├── config
-│   │   └── integration.config.js
-│   ├── domain
-│   │   ├── entities
-│   │   │   └── TestamentRecord.js
-│   │   └── errors
-│   │       └── IntegrationError.js
-│   ├── application
-│   │   ├── ports
-│   │   │   └── README.md
-│   │   ├── services
-│   │   │   └── QualityGateService.js
-│   │   └── use-cases
-│   │       └── CreateDigitalTestamentFlow.js
-│   ├── infrastructure
-│   │   ├── observability
-│   │   │   └── IntegrationTrace.js
-│   │   ├── repositories
-│   │   │   └── MockMongoTestamentRepository.js
-│   │   └── services
-│   │       ├── MockBlockchainService.js
-│   │       ├── MockDocumentService.js
-│   │       ├── MockGcsStorageService.js
-│   │       ├── MockHashService.js
-│   │       ├── MockSignatureService.js
-│   │       ├── MockTranscriptionService.js
-│   │       └── utils.js
-│   └── interfaces
-│       └── cli
-│           └── runFlow.js
-└── tests
-    ├── helpers
-    │   └── buildFlow.js
-    ├── integration
-    │   └── createDigitalTestamentFlow.integration.test.js
-    └── quality
-        └── qualityControl.integration.test.js
-```
-
----
-
-# 5. Requisitos documentados em código
-
-## 5.1. Requisitos funcionais
-
-### RF-01 — Receber vídeo válido do app
-**Implementação:** `CreateDigitalTestamentFlow.validateInput()`
-
-Regra documentada:
-- deve existir `userId`;
-- deve existir `videoFile.name`;
-- o `mimeType` aceito no exemplo é `video/mp4`.
-
-### RF-02 — Enviar vídeo ao armazenamento
-**Implementação:** `MockGcsStorageService.upload()`
-
-Saída esperada:
-- bucket;
-- objectKey;
-- URL;
-- protocolo;
-- versão;
-- tempo;
-- status.
-
-### RF-03 — Transcrever o vídeo
-**Implementação:** `MockTranscriptionService.transcribe()`
-
-Saída esperada:
-- transcriptId;
-- texto transcrito;
-- idioma;
-- confidence;
-- protocolo;
-- versão;
-- tempo;
-- status.
-
-### RF-04 — Gerar documento escrito
-**Implementação:** `MockDocumentService.generate()`
-
-### RF-05 — Assinar digitalmente o documento
-**Implementação:** `MockSignatureService.sign()`
-
-### RF-06 — Gerar hash SHA-256
-**Implementação:** `MockHashService.generate()`
-
-### RF-07 — Ancorar hash em blockchain
-**Implementação:** `MockBlockchainService.anchor()`
-
-### RF-08 — Persistir dossiê do testamento em MongoDB
-**Implementação:** `MockMongoTestamentRepository.save()`
-
-### RF-09 — Retornar trilha de integração
-**Implementação:** `IntegrationTrace`
-
----
-
-## 5.2. Requisitos não funcionais
-
-### RNF-01 — Controle de tempo por etapa
-**Implementação:** `integration.config.js` + `QualityGateService.js`
-
-### RNF-02 — Registro de protocolo usado em cada integração
-**Implementação:** todos os serviços retornam `protocol`
-
-### RNF-03 — Registro de versão usada em cada integração
-**Implementação:** todos os serviços retornam `version`
-
-### RNF-04 — Tratamento padronizado de exceções
-**Implementação:** `IntegrationError.js`
-
-### RNF-05 — Rastreabilidade ponta a ponta
-**Implementação:** `IntegrationTrace.js`
-
-### RNF-06 — Verificação de integridade documental
-**Implementação:** `MockHashService.js` + `QualityGateService.js`
-
----
-
-# 6. Controle de qualidade da integração
-
-## 6.1. Onde o controle está codificado
-
-O controle de qualidade está implementado principalmente em:
-
-- `src/application/services/QualityGateService.js`
-- `tests/quality/qualityControl.integration.test.js`
-
-## 6.2. O que é validado
-
-### A. Tempos
-Cada etapa possui um **tempo máximo permitido**, por exemplo:
-
-- upload GCS: `15000 ms`
-- transcrição: `45000 ms`
-- documento: `5000 ms`
-- assinatura: `10000 ms`
-- hash: `1000 ms`
-- blockchain: `20000 ms`
-- MongoDB: `5000 ms`
-- total ponta a ponta: `120000 ms`
-
-### B. Protocolos
-Cada integração precisa registrar e respeitar o protocolo esperado:
-
-- GCS: `HTTPS/TLS 1.3`
-- Transcrição: `HTTPS/TLS 1.3`
-- Documento: `INTERNAL_EVENT`
-- Assinatura: `HTTPS/TLS 1.3 + CMS/PKCS#7`
-- Hash: `INTERNAL_FUNCTION_CALL`
-- Blockchain: `JSON-RPC 2.0 over HTTPS`
-- MongoDB: `MongoDB Wire Protocol over TLS`
-
-### C. Versões
-Cada etapa informa explicitamente a versão esperada:
-
-- `GCS JSON API v1`
-- `Speech-to-Text API v2`
-- `document-service@1.0.0`
-- `signature-service@2.1.0`
-- `sha256@1.0.0`
-- `blockchain-gateway@1.3.0`
-- `mongodb@8.0`
-
-### D. Exceções
-As exceções são tratadas por classes padronizadas:
-
-- `ValidationError`
-- `ExternalServiceError`
-- `QualityGateError`
-
-### E. Evidências de qualidade
-Ao final do fluxo, o sistema valida:
-
-- presença dos campos obrigatórios do trace;
-- tempo máximo por etapa;
-- protocolo correto por etapa;
-- versão correta por etapa;
-- status `SUCCESS` em cada passo;
-- hash com algoritmo `SHA-256`;
-- existência do `txHash` da blockchain.
-
----
-
-# 7. Gherkin (documentação comportamental)
-
-Para documentar o requisito em linguagem de negócio e facilitar entendimento da integração, foi incluído o arquivo:
-
-- `features/create-digital-testament.feature`
-
-Ele descreve três cenários:
-
-1. **sucesso ponta a ponta**;
-2. **falha por timeout na transcrição**;
-3. **falha na ancoragem em blockchain**.
-
-Isso ajuda a mostrar que os requisitos foram documentados de forma legível para pessoas técnicas e não técnicas.
-
----
-
-# 8. Testes implementados
-
-## 8.1. Testes de integração
-Arquivo:
-- `tests/integration/createDigitalTestamentFlow.integration.test.js`
-
-Cobertura:
-- execução completa com sucesso;
-- falha por timeout na transcrição;
-- falha na blockchain com tratamento padronizado.
-
-## 8.2. Testes de qualidade
-Arquivo:
-- `tests/quality/qualityControl.integration.test.js`
-
-Cobertura:
-- aprovação quando todos os requisitos técnicos estão corretos;
-- reprovação por protocolo divergente;
-- reprovação por ausência de versão em um passo do trace.
-
----
-
-# 9. Como executar
-
-## 9.1. Instalar
-Como o projeto usa apenas recursos nativos do Node.js, basta ter Node 20+.
-
-## 9.2. Rodar o fluxo
 ```bash
 npm start
 ```
 
-## 9.3. Rodar os testes
 ```bash
 npm test
 ```
 
----
-
-# 10. Exemplo do que será demonstrado na execução
-
-Na execução bem-sucedida, o sistema retorna algo conceitualmente assim:
-
+## Exemplo de saida esperada
 ```json
 {
   "summary": {
@@ -441,6 +186,7 @@ Na execução bem-sucedida, o sistema retorna algo conceitualmente assim:
   },
   "trace": {
     "steps": [
+      { "name": "captureVideo", "protocol": "APP_INTERNAL_SECURE_STORAGE", "version": "testify-mobile@1.0.3" },
       { "name": "uploadVideo", "protocol": "HTTPS/TLS 1.3", "version": "GCS JSON API v1" },
       { "name": "transcribeVideo", "protocol": "HTTPS/TLS 1.3", "version": "Speech-to-Text API v2" },
       { "name": "generateDocument", "protocol": "INTERNAL_EVENT", "version": "document-service@1.0.0" },
@@ -453,36 +199,8 @@ Na execução bem-sucedida, o sistema retorna algo conceitualmente assim:
 }
 ```
 
----
+## Justificativa técnica
+O uso de serviços simulados é adequado ao contexto acadêmico porque a atividade pede um fluxo de integração como código, documentado e testado. O foco aqui é deixar claros a estrutura, as regras de qualidade e o tratamento de falhas, sem depender de credenciais reais de GCP, serviços de assinatura, blockchain ou MongoDB em produção.
 
-# 11. Justificativa técnica da modelagem
-
-Este projeto usa **mocks** para os serviços externos porque o objetivo da Sprint é demonstrar:
-
-- a **estrutura de integração**;
-- a **documentação dos requisitos em código**;
-- a **aferição da qualidade da integração**.
-
-Ou seja, o foco não é depender de chaves reais de GCP, assinatura digital, blockchain ou MongoDB em produção, mas sim mostrar uma solução técnica bem organizada, testável e auditável.
-
-Essa escolha é adequada para contexto acadêmico porque:
-
-- permite executar localmente;
-- evidencia arquitetura em camadas;
-- torna o fluxo reproduzível;
-- mostra tratamento de exceções;
-- demonstra qualidade com testes automatizados.
-
----
-
-# 12. Conclusão
-
-Este artefato atende ao enunciado da Sprint 3 porque:
-
-- **identifica e descreve a estrutura de integração** com camadas, módulos, componentes, serviços, hardware, software e processos;
-- **documenta os requisitos em código**;
-- **implementa o controle de qualidade da integração**;
-- **inclui tempos, protocolos, versões e tratamento de exceções**;
-- **fornece testes automatizados e cenários em Gherkin**.
-
-Em outras palavras, o fluxo de criação de testamento digital foi transformado em um **fluxo de integração como código**, com documentação técnica e verificação objetiva de qualidade.
+## Conclusão
+O repositório agora está alinhado ao que o prompt pediu e ao barema: documenta requisitos em código, inclui a etapa de gravação do vídeo, descreve estrutura de integração, implementa controle de qualidade com tempos, protocolos, versões e exceções, e comprova tudo isso por Gherkin e testes automatizados.

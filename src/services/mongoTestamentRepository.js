@@ -1,7 +1,7 @@
-const TestamentRecord = require('../../domain/entities/TestamentRecord');
-const { randomId } = require('../services/utils');
+const TestamentRecord = require('../testamentRecord');
+const { randomId } = require('../utils');
 
-class MockMongoTestamentRepository {
+class MongoTestamentRepository {
   constructor(config, overrides = {}) {
     this.config = config;
     this.overrides = overrides;
@@ -28,4 +28,4 @@ class MockMongoTestamentRepository {
   }
 }
 
-module.exports = MockMongoTestamentRepository;
+module.exports = MongoTestamentRepository;

@@ -1,10 +1,10 @@
 {
   "name": "testify-digital-testament-integration",
   "version": "1.0.0",
-  "description": "Fluxo de integração como código para criação de testamento digital no app Testify.",
+  "description": "Fluxo de integracao como codigo para criacao de testamento digital no app Testify.",
   "type": "commonjs",
   "scripts": {
-    "start": "node src/interfaces/cli/runFlow.js",
+    "start": "node src/cli.js",
     "test": "node --test tests/**/*.test.js"
   },
   "keywords": [

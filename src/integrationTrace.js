@@ -30,7 +30,7 @@ class IntegrationTrace {
   }
 
   totalDurationMs() {
-    return this.steps.reduce((acc, step) => acc + (step.durationMs || 0), 0);
+    return this.steps.reduce((total, step) => total + (step.durationMs || 0), 0);
   }
 }
 
