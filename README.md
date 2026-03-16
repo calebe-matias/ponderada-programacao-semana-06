@@ -5,28 +5,28 @@ Este repositório implementa, em Node.js, o fluxo de criação de testamento dig
 
 1. gravação do video no app;
 2. upload do video para o GCS;
-3. transcricao;
-4. criacao do documento escrito;
+3. transcrição;
+4. criação do documento escrito;
 5. assinatura digital;
-6. geracao do hash;
+6. geração do hash;
 7. salvamento do hash em blockchain;
-8. persistencia dos dados no MongoDB.
+8. persistência dos dados no MongoDB.
 
-Os servicos externos sao simulados para permitir execucao local, mas o controle de qualidade continua verificando tempos, protocolos, versoes e tratamento de excecoes.
+Os serviços externos são simulados para permitir execução local, mas o controle de qualidade continua verificando tempos, protocolos, versões e tratamento de exceções.
 
-## Como a entrega responde ao barema
-### Item (a): estrutura de integracao
+
+### Item (a): estrutura de integração
 O projeto identifica e descreve:
 
-- camadas logicas: entrada CLI, orquestracao do fluxo, servicos integrados, rastreabilidade e repositorio;
-- modulos e componentes: `createDigitalTestamentFlow`, `qualityGate`, `integrationTrace` e os servicos em `src/services`;
-- servicos externos simulados: captura mobile, GCS, transcricao, geracao documental, assinatura, blockchain e MongoDB;
-- hardware: smartphone do usuario, infraestrutura cloud e nos da blockchain;
+- camadas lógicas: entrada CLI, orquestração do fluxo, serviços integrados, rastreabilidade e repositório;
+- módulos e componentes: `createDigitalTestamentFlow`, `qualityGate`, `integrationTrace` e os serviços em `src/services`;
+- serviços externos simulados: captura mobile, GCS, transcrição, geração documental, assinatura, blockchain e MongoDB;
+- hardware: smartphone do usuário, infraestrutura cloud e nós da blockchain;
 - software: app Testify, runtime Node.js e APIs externas representadas por mocks;
-- processos: captura, upload, transcricao, formalizacao documental, assinatura, hashing, ancoragem e persistencia.
+- processos: captura, upload, transcrição, formalização documental, assinatura, hashing, ancoragem e persistência.
 
-### Item (b): controle de qualidade da integracao
-O controle de qualidade esta implementado em codigo e testado automaticamente. Ele valida:
+### Item (b): controle de qualidade da integração
+O controle de qualidade esta implementado em código e testado automaticamente. Ele valida:
 
 - tempos máximos por etapa e tempo total;
 - protocolo usado em cada integração;
@@ -83,12 +83,12 @@ Essa estrutura continua organizada, mas sem as camadas artificiais que o gerador
 App Testify Mobile
   -> gravação do video
   -> upload ao GCS
-  -> transcricao
-  -> geracao do documento
+  -> transcrição
+  -> geração do documento
   -> assinatura digital
   -> hash SHA-256
   -> ancoragem em blockchain
-  -> persistencia no MongoDB
+  -> persistência no MongoDB
   -> retorno do identificador e do trace
 ```
 
